@@ -1,0 +1,93 @@
+// Code your design here
+module synchronous_ram #(
+    parameter DATA_WIDTH = 8,
+    parameter ADDR_WIDTH = 6
+)(
+    input wire clk,
+    input wire we,
+    input wire [ADDR_WIDTH-1:0] addr,
+    input wire [DATA_WIDTH-1:0] data_in,
+    output reg [DATA_WIDTH-1:0] data_out
+);
+
+    // Memory array
+    reg [DATA_WIDTH-1:0] mem [0:(1<<ADDR_WIDTH)-1];
+
+    always @(posedge clk) begin
+        if (we) begin
+            mem[addr] <= data_in; // Write operation
+        end
+        data_out <= mem[addr]; // Read operation
+    end
+
+endmodule
+module synchronous_ram_tb;
+
+    // Parameters
+    parameter DATA_WIDTH = 8;
+    parameter ADDR_WIDTH = 6;
+
+    // Testbench signals
+    reg clk;
+    reg we;
+    reg [ADDR_WIDTH-1:0] addr;
+    reg [DATA_WIDTH-1:0] data_in;
+    wire [DATA_WIDTH-1:0] data_out;
+
+    // Instantiate the RAM module
+    synchronous_ram #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .ADDR_WIDTH(ADDR_WIDTH)
+    ) uut (
+        .clk(clk),
+        .we(we),
+        .addr(addr),
+        .data_in(data_in),
+        .data_out(data_out)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // 10ns period
+    end
+
+    // Test sequence
+    initial begin
+        // Initialize signals
+        we = 0;
+        addr = 0;
+        data_in = 0;
+
+        // Wait for reset
+        #10;
+
+        // Write data to address 10
+        addr = 10;
+        data_in = 8'hAA;
+        we = 1;
+        #10;
+
+        // Write data to address 20
+        addr = 20;
+        data_in = 8'hBB;
+        #10;
+
+        // Disable write enable
+        we = 0;
+
+        // Read data from address 10
+        addr = 10;
+        #10;
+        $display("Read data from address 10: %h", data_out);
+
+        // Read data from address 20
+        addr = 20;
+        #10;
+        $display("Read data from address 20: %h", data_out);
+
+        // End simulation
+        $finish;
+    end
+
+endmodule
